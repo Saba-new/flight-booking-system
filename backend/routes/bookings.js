@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+const uuidv4 = () => crypto.randomUUID();
+const { verifyToken } = require('../middleware/auth');
+
+router.use(verifyToken);
 
 // GET /api/bookings - Giriş yapmış kullanıcının rezervasyonlarını getirir
 router.get('/', async (req, res) => {

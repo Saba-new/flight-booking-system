@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { verifyToken, JWT_SECRET } = require('../middleware/auth');
 
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
@@ -30,7 +32,26 @@ router.post('/signup', async (req, res) => {
         );
         
         await connection.commit();
-        res.status(201).json({ customerID: insertId, fullName, email, role: 'Customer', name });
+
+        const userPayload = {
+            customerID: insertId,
+            fullName,
+            email,
+            role: 'Customer',
+            name
+        };
+
+        const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '24h' });
+
+        res.status(201).json({
+            token,
+            customerID: insertId,
+            fullName,
+            email,
+            role: 'Customer',
+            name,
+            user: userPayload
+        });
     } catch (err) {
         await connection.rollback();
         if (err.code === 'ER_DUP_ENTRY') {
@@ -46,6 +67,10 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { name, password } = req.body;
     
+    if (!name || !password) {
+        return res.status(400).json({ message: "Eksik bilgi gönderildi." });
+    }
+
     try {
         const query = `
             SELECT u.\`customerID\`, u.\`name\`, u.\`password\`, c.\`fullName\`, c.\`email\`, c.\`role\`
@@ -62,12 +87,24 @@ router.post('/login', async (req, res) => {
         
         if (!match) return res.status(401).json({ message: "Kullanıcı adı veya şifre hatalı." });
         
-        res.json({
+        const userPayload = {
             customerID: user.customerID,
             fullName: user.fullName,
             email: user.email,
             role: user.role,
             name: user.name
+        };
+
+        const token = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '24h' });
+
+        res.json({
+            token,
+            customerID: user.customerID,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role,
+            name: user.name,
+            user: userPayload
         });
     } catch (err) {
         res.status(500).json({ message: "Giriş işlemi başarısız.", error: err.message });
@@ -76,11 +113,11 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-    res.json({});
+    res.json({ message: "Çıkış başarılı." });
 });
 
-// GET /api/me
-router.get('/me', (req, res) => {
+// GET /api/auth/me
+router.get('/me', verifyToken, (req, res) => {
     if (!req.user) {
         return res.status(401).json({ message: "Giriş yapılmamış." });
     }
