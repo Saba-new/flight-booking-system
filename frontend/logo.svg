@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Flight Booking logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A2A66"/>
+      <stop offset="1" stop-color="#2B74E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <g transform="translate(1 -2)">
+  <path d="M13 41C22 38 38 30 51 13 48 33 33 47 13 41Z" fill="#fff"/>
+  <path d="M13 51C21 50 33 45 43 33 40 45 28 55 13 51Z" fill="#fff" fill-opacity=".55"/>
+  </g>
+</svg>
